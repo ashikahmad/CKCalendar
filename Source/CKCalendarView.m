@@ -103,7 +103,7 @@
 @interface CKCalendarView ()
 
 @property(nonatomic, strong) UIView *highlight;
-@property(nonatomic, strong) UILabel *titleLabel;
+@property(nonatomic, strong) UIButton *titleButton;
 @property(nonatomic, strong) UIButton *prevButton;
 @property(nonatomic, strong) UIButton *nextButton;
 @property(nonatomic, strong) UIView *calendarContainer;
@@ -122,7 +122,7 @@
 @implementation CKCalendarView
 
 @synthesize highlight = _highlight;
-@synthesize titleLabel = _titleLabel;
+@synthesize titleButton = _titleButton;
 @synthesize prevButton = _prevButton;
 @synthesize nextButton = _nextButton;
 @synthesize calendarContainer = _calendarContainer;
@@ -179,12 +179,12 @@
     self.highlight = highlight;
     
     // SET UP THE HEADER
-    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-    titleLabel.textAlignment = NSTextAlignmentCenter;
-    titleLabel.backgroundColor = [UIColor clearColor];
-    titleLabel.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
-    [self addSubview:titleLabel];
-    self.titleLabel = titleLabel;
+    UIButton *titleButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    titleButton.titleLabel.textAlignment = NSTextAlignmentCenter;
+    titleButton.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
+    [titleButton addTarget:self action:@selector(_moveCalendarToToday) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:titleButton];
+    self.titleButton = titleButton;
     
     UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [prevButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:self.monthButtonSize left:YES] forState:UIControlStateNormal];
@@ -286,12 +286,13 @@
     
     self.highlight.frame = CGRectMake(1, 1, self.bounds.size.width - 2, 1);
     
-    self.titleLabel.text = [self.dateFormatter stringFromDate:_monthShowing];
-    self.titleLabel.frame = CGRectMake(0, 0, self.bounds.size.width, TOP_HEIGHT);
+    [self setTitleButtonText:[self.dateFormatter stringFromDate:_monthShowing]];
+    self.titleButton.frame = CGRectMake(0, 0, self.bounds.size.width, TOP_HEIGHT);
+    self.titleButton.titleLabel.frame = CGRectMake(0, 0, self.titleButton.frame.size.width, self.titleButton.frame.size.height);
     self.prevButton.frame = CGRectMake(BUTTON_MARGIN, BUTTON_MARGIN, 48, 38);
     self.nextButton.frame = CGRectMake(self.bounds.size.width - 48 - BUTTON_MARGIN, BUTTON_MARGIN, 48, 38);
     
-    self.calendarContainer.frame = CGRectMake(CALENDAR_MARGIN, CGRectGetMaxY(self.titleLabel.frame), containerWidth, containerHeight);
+    self.calendarContainer.frame = CGRectMake(CALENDAR_MARGIN, CGRectGetMaxY(self.titleButton.frame), containerWidth, containerHeight);
     self.daysHeader.frame = CGRectMake(0, 0, self.calendarContainer.frame.size.width, DAYS_HEADER_HEIGHT);
     
     CGRect lastDayFrame = CGRectZero;
@@ -495,20 +496,27 @@
     [self setNeedsLayout];
 }
 
+-(void) setTitleButtonText:(NSString *) title {
+    [self.titleButton setTitle:title forState:UIControlStateNormal];
+    [self.titleButton setTitle:title forState:UIControlStateHighlighted];
+    [self.titleButton setTitle:title forState:UIControlStateSelected];
+    [self.titleButton setTitle:title forState:UIControlStateDisabled];
+}
+
 #pragma mark - Theming getters/setters
 
 - (void)setTitleFont:(UIFont *)font {
-    self.titleLabel.font = font;
+    self.titleButton.titleLabel.font = font;
 }
 - (UIFont *)titleFont {
-    return self.titleLabel.font;
+    return self.titleButton.titleLabel.font;
 }
 
 - (void)setTitleColor:(UIColor *)color {
-    self.titleLabel.textColor = color;
+    self.titleButton.titleLabel.textColor = color;
 }
 - (UIColor *)titleColor {
-    return self.titleLabel.textColor;
+    return self.titleButton.titleLabel.textColor;
 }
 
 - (void)setMonthButtonColor:(UIColor *)color {
