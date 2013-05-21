@@ -98,6 +98,7 @@
     if ([self dateIsDisabled:date]) {
         dateItem.backgroundColor = [UIColor redColor];
         dateItem.textColor = [UIColor whiteColor];
+        dateItem.offDayTextColor = [UIColor whiteColor];
     }
 }
 

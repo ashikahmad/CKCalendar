@@ -336,6 +336,11 @@
             item.offDayTextColor = UIColorFromRGB(0xFFCCCC);
         }
         
+        // Override style with user-style
+        if (self.delegate && [self.delegate respondsToSelector:@selector(calendar:configureDateItem:forDate:)]) {
+            [self.delegate calendar:self configureDateItem:item forDate:date];
+        }
+        
         // Selected Day
         if (self.selectedDate && [self date:self.selectedDate isSameDayAsDate:date]) {
             [dateButton setTitleColor:item.selectedTextColor forState:UIControlStateNormal];
@@ -350,11 +355,6 @@
         else {
             [dateButton setTitleColor:item.textColor forState:UIControlStateNormal];
             dateButton.backgroundColor = item.backgroundColor;
-        }
-        
-        // Override style with user-style
-        if (self.delegate && [self.delegate respondsToSelector:@selector(calendar:configureDateItem:forDate:)]) {
-            [self.delegate calendar:self configureDateItem:item forDate:date];
         }
         
         dateButton.frame = [self _calculateDateCellFrame:date offsetX:cellXOffset];
@@ -626,11 +626,6 @@
     }
 }
 
-//- (NSInteger)_placeInWeekForDate2:(NSDate *)date {
-//    NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
-//    return (compsFirstDayInMonth.weekday - 1 - self.calendar.firstWeekday + 8) % 7;
-//}
-
 - (NSInteger)_placeInWeekForDate:(NSDate *)date {
     NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
     return (compsFirstDayInMonth.weekday - self.calendar.firstWeekday + 7) % 7;
@@ -660,13 +655,6 @@
 }
 
 - (NSInteger)_numberOfWeeksInMonthContainingDate:(NSDate *)date {
-//    NSDate *firstDate = [self _firstDayOfMonthContainingDate:date];
-//    NSUInteger firstDay = [self _placeInWeekForDate:firstDate];
-//    int totalDays = [self.calendar rangeOfUnit:NSDayCalendarUnit
-//                                        inUnit:NSMonthCalendarUnit
-//                                       forDate:date].length;
-//    totalDays += firstDay;
-//    return ceilf(totalDays/7);
     return [self.calendar rangeOfUnit:NSWeekCalendarUnit inUnit:NSMonthCalendarUnit forDate:date].length;
 }
 
