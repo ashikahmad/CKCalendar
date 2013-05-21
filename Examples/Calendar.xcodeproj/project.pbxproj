@@ -82,10 +82,10 @@
 		1D2391395A8710F3E85A5A /* Calendar */ = {
 			isa = PBXGroup;
 			children = (
-				1D2391395A8710F3E85A84 /* CKCalendarView.m */,
 				1D2391395A8710F3E85A83 /* CKCalendarView.h */,
-				1D2391395A8710F3E85A67 /* CKViewController.m */,
+				1D2391395A8710F3E85A84 /* CKCalendarView.m */,
 				1D2391395A8710F3E85A66 /* CKViewController.h */,
+				1D2391395A8710F3E85A67 /* CKViewController.m */,
 				1D2391395A8710F3E85A64 /* CKAppDelegate.m */,
 				1D2391395A8710F3E85A63 /* CKAppDelegate.h */,
 				1D2391395A8710F3E85A5B /* Supporting Files */,

@@ -147,14 +147,14 @@
 @dynamic locale;
 
 - (id)init {
-    return [self initWithStartDay:startSunday];
+    return [self initWithStartDay:SUNDAY];
 }
 
-- (id)initWithStartDay:(CKCalendarStartDay)firstDay {
+- (id)initWithStartDay:(CKCalendarWeekDay)firstDay {
     return [self initWithStartDay:firstDay frame:CGRectMake(0, 0, 320, 320)];
 }
 
-- (void)_init:(CKCalendarStartDay)firstDay {
+- (void)_init:(CKCalendarWeekDay)firstDay {
     self.calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
     [self.calendar setLocale:[NSLocale currentLocale]];
     
@@ -245,7 +245,7 @@
     [self layoutSubviews]; // TODO: this is a hack to get the first month to show properly
 }
 
-- (id)initWithStartDay:(CKCalendarStartDay)firstDay frame:(CGRect)frame {
+- (id)initWithStartDay:(CKCalendarWeekDay)firstDay frame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
         [self _init:firstDay];
@@ -254,13 +254,13 @@
 }
 
 - (id)initWithFrame:(CGRect)frame {
-    return [self initWithStartDay:startSunday frame:frame];
+    return [self initWithStartDay:SUNDAY frame:frame];
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self) {
-        [self _init:startSunday];
+        [self _init:SUNDAY];
     }
     return self;
 }
@@ -269,13 +269,16 @@
     [super layoutSubviews];
     
     CGFloat containerWidth = self.bounds.size.width - (CALENDAR_MARGIN * 2);
-    self.cellWidth = (floorf(containerWidth / 7.0)) - CELL_BORDER_WIDTH;
+    self.cellWidth = (floorf((containerWidth-CELL_BORDER_WIDTH) / 7.0)) - CELL_BORDER_WIDTH;
+    
+    // distribute floored diff to both side
+    CGFloat cellXOffset = ((containerWidth-CELL_BORDER_WIDTH) - (self.cellWidth+CELL_BORDER_WIDTH)*7)/2;
     
     NSInteger numberOfWeeksToShow = 6;
     if (self.adaptHeightToNumberOfWeeksInMonth) {
         numberOfWeeksToShow = [self _numberOfWeeksInMonthContainingDate:self.monthShowing];
     }
-    CGFloat containerHeight = (numberOfWeeksToShow * (self.cellWidth + CELL_BORDER_WIDTH) + DAYS_HEADER_HEIGHT);
+    CGFloat containerHeight = (numberOfWeeksToShow * (self.cellWidth + CELL_BORDER_WIDTH) + DAYS_HEADER_HEIGHT + CELL_BORDER_WIDTH);
     
     CGRect newFrame = self.frame;
     newFrame.size.height = containerHeight + CALENDAR_MARGIN + TOP_HEIGHT;
@@ -340,7 +343,7 @@
             dateButton.backgroundColor = item.backgroundColor;
         }
         
-        dateButton.frame = [self _calculateDayCellFrame:date];
+        dateButton.frame = [self _calculateDateCellFrame:date offsetX:cellXOffset];
         
         [self.calendarContainer addSubview:dateButton];
         
@@ -365,7 +368,7 @@
     }
 }
 
-- (void)setCalendarStartDay:(CKCalendarStartDay)calendarStartDay {
+- (void)setCalendarStartDay:(CKCalendarWeekDay)calendarStartDay {
     _calendarStartDay = calendarStartDay;
     [self.calendar setFirstWeekday:self.calendarStartDay];
     [self _updateDayOfWeekLabels];
@@ -436,41 +439,42 @@
     [self setDateBorderColor:UIColorFromRGB(0xDAE1E6)];
 }
 
-- (CGRect)_calculateDayCellFrame:(NSDate *)date {
+- (CGRect)_calculateDateCellFrame:(NSDate *)date offsetX: (CGFloat) offsetX {
     NSInteger numberOfDaysSinceBeginningOfThisMonth = [self _numberOfDaysFromDate:self.monthShowing toDate:date];
     NSInteger row = (numberOfDaysSinceBeginningOfThisMonth + [self _placeInWeekForDate:self.monthShowing]) / 7;
 	
     NSInteger placeInWeek = [self _placeInWeekForDate:date];
     
-    return CGRectMake(placeInWeek * (self.cellWidth + CELL_BORDER_WIDTH), (row * (self.cellWidth + CELL_BORDER_WIDTH)) + CGRectGetMaxY(self.daysHeader.frame) + CELL_BORDER_WIDTH, self.cellWidth, self.cellWidth);
+    return CGRectMake(placeInWeek * (self.cellWidth + CELL_BORDER_WIDTH) + CELL_BORDER_WIDTH + offsetX, (row * (self.cellWidth + CELL_BORDER_WIDTH)) + CGRectGetMaxY(self.daysHeader.frame) + CELL_BORDER_WIDTH, self.cellWidth, self.cellWidth);
+}
+
+- (void)_moveCalendarToMonth:(NSDate *)newMonth {
+    if ([self.delegate respondsToSelector:@selector(calendar:willChangeToMonth:)] && ![self.delegate calendar:self willChangeToMonth:newMonth]) {
+        return;
+    } else {
+        self.monthShowing = newMonth;
+        if ([self.delegate respondsToSelector:@selector(calendar:didChangeToMonth:)] ) {
+            [self.delegate calendar:self didChangeToMonth:self.monthShowing];
+        }
+    }
 }
 
 - (void)_moveCalendarToNextMonth {
     NSDateComponents* comps = [[NSDateComponents alloc] init];
     [comps setMonth:1];
     NSDate *newMonth = [self.calendar dateByAddingComponents:comps toDate:self.monthShowing options:0];
-    if ([self.delegate respondsToSelector:@selector(calendar:willChangeToMonth:)] && ![self.delegate calendar:self willChangeToMonth:newMonth]) {
-        return;
-    } else {
-        self.monthShowing = newMonth;
-        if ([self.delegate respondsToSelector:@selector(calendar:didChangeToMonth:)] ) {
-            [self.delegate calendar:self didChangeToMonth:self.monthShowing];
-        }
-    }
+    [self _moveCalendarToMonth:newMonth];
 }
 
 - (void)_moveCalendarToPreviousMonth {
     NSDateComponents* comps = [[NSDateComponents alloc] init];
     [comps setMonth:-1];
     NSDate *newMonth = [self.calendar dateByAddingComponents:comps toDate:self.monthShowing options:0];
-    if ([self.delegate respondsToSelector:@selector(calendar:willChangeToMonth:)] && ![self.delegate calendar:self willChangeToMonth:newMonth]) {
-        return;
-    } else {
-        self.monthShowing = newMonth;
-        if ([self.delegate respondsToSelector:@selector(calendar:didChangeToMonth:)] ) {
-            [self.delegate calendar:self didChangeToMonth:self.monthShowing];
-        }
-    }
+    [self _moveCalendarToMonth:newMonth];
+}
+
+-(void) _moveCalendarToToday {
+    [self _moveCalendarToMonth:[NSDate date]];
 }
 
 - (void)_dateButtonPressed:(id)sender {
@@ -601,9 +605,14 @@
     }
 }
 
-- (NSInteger)_placeInWeekForDate:(NSDate *)date {
+- (NSInteger)_placeInWeekForDate2:(NSDate *)date {
     NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
     return (compsFirstDayInMonth.weekday - 1 - self.calendar.firstWeekday + 8) % 7;
+}
+
+- (NSInteger)_placeInWeekForDate:(NSDate *)date {
+    NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
+    return (compsFirstDayInMonth.weekday - self.calendar.firstWeekday + 7) % 7;
 }
 
 - (BOOL)_dateIsToday:(NSDate *)date {
@@ -625,6 +634,13 @@
 }
 
 - (NSInteger)_numberOfWeeksInMonthContainingDate:(NSDate *)date {
+//    NSDate *firstDate = [self _firstDayOfMonthContainingDate:date];
+//    NSUInteger firstDay = [self _placeInWeekForDate:firstDate];
+//    int totalDays = [self.calendar rangeOfUnit:NSDayCalendarUnit
+//                                        inUnit:NSMonthCalendarUnit
+//                                       forDate:date].length;
+//    totalDays += firstDay;
+//    return ceilf(totalDays/7);
     return [self.calendar rangeOfUnit:NSWeekCalendarUnit inUnit:NSMonthCalendarUnit forDate:date].length;
 }
 

@@ -27,16 +27,21 @@
 @end
 
 typedef enum {
-    startSunday = 1,
-    startMonday = 2,
-} CKCalendarStartDay;
+    SUNDAY      = 1,
+    MONDAY      = 2,
+    TUESDAY     = 3,
+    WEDNESDAY   = 4,
+    THURSDAY    = 5,
+    FRIDAY      = 6,
+    SATURDAY    = 7
+} CKCalendarWeekDay;
 
 @interface CKCalendarView : UIView
 
-- (id)initWithStartDay:(CKCalendarStartDay)firstDay;
-- (id)initWithStartDay:(CKCalendarStartDay)firstDay frame:(CGRect)frame;
+- (id)initWithStartDay:(CKCalendarWeekDay)firstDay;
+- (id)initWithStartDay:(CKCalendarWeekDay)firstDay frame:(CGRect)frame;
 
-@property (nonatomic) CKCalendarStartDay calendarStartDay;
+@property (nonatomic) CKCalendarWeekDay calendarStartDay;
 @property (nonatomic, strong) NSLocale *locale;
 @property (nonatomic) BOOL onlyShowCurrentMonth;
 @property (nonatomic) BOOL adaptHeightToNumberOfWeeksInMonth;

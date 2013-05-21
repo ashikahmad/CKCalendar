@@ -17,7 +17,7 @@
 - (id)init {
     self = [super init];
     if (self) {
-        CKCalendarView *calendar = [[CKCalendarView alloc] initWithStartDay:startMonday];
+        CKCalendarView *calendar = [[CKCalendarView alloc] initWithStartDay:SUNDAY];
         self.calendar = calendar;
         calendar.delegate = self;
 
