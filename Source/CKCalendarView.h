@@ -24,6 +24,7 @@
 @property (nonatomic, strong) UIColor *textColor;
 @property (nonatomic, strong) UIColor *selectedTextColor;
 @property (nonatomic, strong) UIColor *offDayTextColor;
+@property (nonatomic, strong) UIColor *notificationColor; // default: nil for no notification
 
 @end
 

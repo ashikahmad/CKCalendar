@@ -31,6 +31,13 @@
 
 #define UIColorFromRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 green:((float)((rgbValue & 0xFF00) >> 8))/255.0 blue:((float)(rgbValue & 0xFF))/255.0 alpha:1.0]
 
+#define kNotificationTag 321
+
+typedef enum {
+    ARROW_LEFT,
+    ARROW_RIGHT,
+    ARROW_NOTIFICATION
+} ARROW_STYLE;
 
 @class CALayer;
 @class CAGradientLayer;
@@ -95,6 +102,7 @@
         self.textColor = UIColorFromRGB(0x393B40);
         self.selectedTextColor = UIColorFromRGB(0xF2F2F2);
         self.offDayTextColor = UIColorFromRGB(0xFF0000);
+        self.notificationColor = nil;
     }
     return self;
 }
@@ -190,14 +198,14 @@
     self.titleButton = titleButton;
     
     UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [prevButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:self.monthButtonSize left:YES] forState:UIControlStateNormal];
+    [prevButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:self.monthButtonSize style:ARROW_LEFT] forState:UIControlStateNormal];
     prevButton.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
     [prevButton addTarget:self action:@selector(_moveCalendarToPreviousMonth) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:prevButton];
     self.prevButton = prevButton;
     
     UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [nextButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:self.monthButtonSize left:NO] forState:UIControlStateNormal];
+    [nextButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:self.monthButtonSize style:ARROW_RIGHT] forState:UIControlStateNormal];
     nextButton.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin;
     [nextButton addTarget:self action:@selector(_moveCalendarToNextMonth) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:nextButton];
@@ -358,6 +366,23 @@
         }
         
         dateButton.frame = [self _calculateDateCellFrame:date offsetX:cellXOffset];
+        
+        if (item.notificationColor) {
+            UIImage *img = [CKCalendarView _arrowWithColor:item.notificationColor
+                                                      size:CGSizeMake(10, 10)
+                                                     style:ARROW_NOTIFICATION];
+            UIImageView *imgView = (UIImageView *)[dateButton viewWithTag:kNotificationTag];
+            if (!imgView) {
+                imgView = [[UIImageView alloc] initWithImage:img];
+                imgView.tag = kNotificationTag;
+                imgView.frame = CGRectMake(2, 2, imgView.frame.size.width, imgView.frame.size.height);
+                [dateButton addSubview:imgView];
+            } else
+                [imgView setImage:img];
+        } else if ([dateButton viewWithTag:kNotificationTag]){
+            UIView *imgView = [dateButton viewWithTag:kNotificationTag];
+            [imgView removeFromSuperview];
+        }
         
         [self.calendarContainer addSubview:dateButton];
         
@@ -533,8 +558,8 @@
 }
 
 - (void)setMonthButtonColor:(UIColor *)color {
-    [self.prevButton setImage:[CKCalendarView _arrowWithColor:color size:self.monthButtonSize left:YES] forState:UIControlStateNormal];
-    [self.nextButton setImage:[CKCalendarView _arrowWithColor:color size:self.monthButtonSize left:NO] forState:UIControlStateNormal];
+    [self.prevButton setImage:[CKCalendarView _arrowWithColor:color size:self.monthButtonSize style:ARROW_LEFT] forState:UIControlStateNormal];
+    [self.nextButton setImage:[CKCalendarView _arrowWithColor:color size:self.monthButtonSize style:ARROW_RIGHT] forState:UIControlStateNormal];
 }
 
 - (void)setInnerBorderColor:(UIColor *)color {
@@ -582,8 +607,8 @@
 -(void)setMonthButtonSize:(CGSize) p_monthButtonSize {
     _monthButtonSize = p_monthButtonSize;
     
-    [self.prevButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:_monthButtonSize left:YES] forState:UIControlStateNormal];
-    [self.nextButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:_monthButtonSize left:NO] forState:UIControlStateNormal];
+    [self.prevButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:_monthButtonSize style:ARROW_LEFT] forState:UIControlStateNormal];
+    [self.nextButton setImage:[CKCalendarView _arrowWithColor:[UIColor whiteColor] size:_monthButtonSize style:ARROW_RIGHT] forState:UIControlStateNormal];
 }
 
 -(CGSize)monthButtonSize {
@@ -676,7 +701,7 @@
     return endDay - startDay;
 }
 
-+(UIImage *) _arrowWithColor:(UIColor *) color size:(CGSize) size left:(BOOL) isLeft {
++(UIImage *) _arrowWithColor:(UIColor *) color size:(CGSize) size style:(ARROW_STYLE) arrowStyle {
     UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
     
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -686,15 +711,25 @@
     CGContextScaleCTM(context, 1.0, -1.0);
     
     CGMutablePathRef path = CGPathCreateMutable();
-    if (isLeft) {
-        CGPathMoveToPoint(path, NULL, 0, size.height/2);
-        CGPathAddLineToPoint(path, NULL, size.width, 0);
-        CGPathAddLineToPoint(path, NULL, size.width, size.height);
-        //    CGPathAddLineToPoint(path, NULL, 100,100);
-    } else {
-        CGPathMoveToPoint(path, NULL, 0, 0);
-        CGPathAddLineToPoint(path, NULL, size.width, size.height/2);
-        CGPathAddLineToPoint(path, NULL, 0, size.height);
+    
+    switch (arrowStyle) {
+        case ARROW_LEFT:
+            CGPathMoveToPoint(path, NULL, 0, size.height/2);
+            CGPathAddLineToPoint(path, NULL, size.width, 0);
+            CGPathAddLineToPoint(path, NULL, size.width, size.height);
+            break;
+        case ARROW_RIGHT:
+            CGPathMoveToPoint(path, NULL, 0, 0);
+            CGPathAddLineToPoint(path, NULL, size.width, size.height/2);
+            CGPathAddLineToPoint(path, NULL, 0, size.height);
+            break;
+        case ARROW_NOTIFICATION:
+            CGPathMoveToPoint(path, NULL, 0, 0);
+            CGPathAddLineToPoint(path, NULL, size.width, size.height);
+            CGPathAddLineToPoint(path, NULL, 0, size.height);
+            break;
+        default:
+            break;
     }
     
     CGPathCloseSubpath(path);

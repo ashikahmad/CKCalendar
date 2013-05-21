@@ -9,6 +9,7 @@
 @property(nonatomic, strong) NSDateFormatter *dateFormatter;
 @property(nonatomic, strong) NSDate *minimumDate;
 @property(nonatomic, strong) NSArray *disabledDates;
+@property(nonatomic, strong) NSArray *birthDays;
 
 @end
 
@@ -31,6 +32,13 @@
                 [self.dateFormatter dateFromString:@"07/01/2013"]
         ];
         
+        self.birthDays = @[
+                [self.dateFormatter dateFromString:@"07/01/2013"],
+                [self.dateFormatter dateFromString:@"11/01/2013"],
+                [self.dateFormatter dateFromString:@"05/02/2013"],
+                [self.dateFormatter dateFromString:@"25/01/2013"]
+        ];
+        
         self.calendar.offDays = @[
                 [NSNumber numberWithInt:FRIDAY],
                 [NSNumber numberWithInt:SATURDAY]
@@ -39,7 +47,7 @@
         calendar.onlyShowCurrentMonth = NO;
         calendar.adaptHeightToNumberOfWeeksInMonth = YES;
 
-        calendar.frame = CGRectMake(10, 10, 300, 320);
+        calendar.frame = CGRectMake(10, 50, 300, 320);
         [self.view addSubview:calendar];
 
         self.dateLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(calendar.frame) + 4, self.view.bounds.size.width, 24)];
@@ -82,12 +90,7 @@
 }
 
 - (BOOL)dateIsDisabled:(NSDate *)date {
-    for (NSDate *disabledDate in self.disabledDates) {
-        if ([disabledDate isEqualToDate:date]) {
-            return YES;
-        }
-    }
-    return NO;
+    return [self.disabledDates containsObject:date];
 }
 
 #pragma mark -
@@ -99,6 +102,12 @@
         dateItem.backgroundColor = [UIColor redColor];
         dateItem.textColor = [UIColor whiteColor];
         dateItem.offDayTextColor = [UIColor whiteColor];
+    }
+    if ([self.birthDays containsObject:date]) {
+        if([self dateIsDisabled:date])
+            dateItem.notificationColor = [UIColor cyanColor];
+        else
+            dateItem.notificationColor = [UIColor purpleColor];
     }
 }
 
