@@ -17,7 +17,7 @@
 - (id)init {
     self = [super init];
     if (self) {
-        CKCalendarView *calendar = [[CKCalendarView alloc] initWithStartDay:SUNDAY];
+        CKCalendarView *calendar = [[CKCalendarView alloc] initWithStartDay:SATURDAY];
         self.calendar = calendar;
         calendar.delegate = self;
 
@@ -29,6 +29,11 @@
                 [self.dateFormatter dateFromString:@"05/01/2013"],
                 [self.dateFormatter dateFromString:@"06/01/2013"],
                 [self.dateFormatter dateFromString:@"07/01/2013"]
+        ];
+        
+        self.calendar.offDays = @[
+                [NSNumber numberWithInt:FRIDAY],
+                [NSNumber numberWithInt:SATURDAY]
         ];
 
         calendar.onlyShowCurrentMonth = NO;

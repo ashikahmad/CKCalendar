@@ -94,6 +94,7 @@
         self.selectedBackgroundColor = UIColorFromRGB(0x88B6DB);
         self.textColor = UIColorFromRGB(0x393B40);
         self.selectedTextColor = UIColorFromRGB(0xF2F2F2);
+        self.offDayTextColor = UIColorFromRGB(0xFF0000);
     }
     return self;
 }
@@ -143,6 +144,7 @@
 @synthesize adaptHeightToNumberOfWeeksInMonth = _adaptHeightToNumberOfWeeksInMonth;
 
 @synthesize monthButtonSize = _monthButtonSize;
+@synthesize offDays = _offDays;
 
 @dynamic locale;
 
@@ -169,6 +171,7 @@
     self.adaptHeightToNumberOfWeeksInMonth = YES;
     
     self.monthButtonSize = DEFAULT_MONTH_BUTTON_SIZE;
+    self.offDays = @[[NSNumber numberWithInt:SUNDAY]];
     
     self.layer.cornerRadius = 6.0f;
     
@@ -330,18 +333,28 @@
             item.backgroundColor = [UIColor lightGrayColor];
         } else if (!self.onlyShowCurrentMonth && [self _compareByMonth:date toDate:self.monthShowing] != NSOrderedSame) {
             item.textColor = [UIColor lightGrayColor];
+            item.offDayTextColor = UIColorFromRGB(0xFFCCCC);
         }
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(calendar:configureDateItem:forDate:)]) {
-            [self.delegate calendar:self configureDateItem:item forDate:date];
-        }
-        
+        // Selected Day
         if (self.selectedDate && [self date:self.selectedDate isSameDayAsDate:date]) {
             [dateButton setTitleColor:item.selectedTextColor forState:UIControlStateNormal];
             dateButton.backgroundColor = item.selectedBackgroundColor;
-        } else {
+        }
+        // Off Day
+        else if ([self _dateIsOffday:date]) {
+            [dateButton setTitleColor:item.offDayTextColor forState:UIControlStateNormal];
+            dateButton.backgroundColor = item.backgroundColor;
+        }
+        // Normal Day
+        else {
             [dateButton setTitleColor:item.textColor forState:UIControlStateNormal];
             dateButton.backgroundColor = item.backgroundColor;
+        }
+        
+        // Override style with user-style
+        if (self.delegate && [self.delegate respondsToSelector:@selector(calendar:configureDateItem:forDate:)]) {
+            [self.delegate calendar:self configureDateItem:item forDate:date];
         }
         
         dateButton.frame = [self _calculateDateCellFrame:date offsetX:cellXOffset];
@@ -613,14 +626,19 @@
     }
 }
 
-- (NSInteger)_placeInWeekForDate2:(NSDate *)date {
-    NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
-    return (compsFirstDayInMonth.weekday - 1 - self.calendar.firstWeekday + 8) % 7;
-}
+//- (NSInteger)_placeInWeekForDate2:(NSDate *)date {
+//    NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
+//    return (compsFirstDayInMonth.weekday - 1 - self.calendar.firstWeekday + 8) % 7;
+//}
 
 - (NSInteger)_placeInWeekForDate:(NSDate *)date {
     NSDateComponents *compsFirstDayInMonth = [self.calendar components:NSWeekdayCalendarUnit fromDate:date];
     return (compsFirstDayInMonth.weekday - self.calendar.firstWeekday + 7) % 7;
+}
+
+-(BOOL)_dateIsOffday:(NSDate *)date {
+    NSUInteger weekday = [self.calendar components:NSWeekdayCalendarUnit fromDate:date].weekday;
+    return [self.offDays containsObject:[NSNumber numberWithInt:weekday]];
 }
 
 - (BOOL)_dateIsToday:(NSDate *)date {

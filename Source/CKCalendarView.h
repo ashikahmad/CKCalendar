@@ -23,6 +23,7 @@
 @property (nonatomic, strong) UIColor *selectedBackgroundColor;
 @property (nonatomic, strong) UIColor *textColor;
 @property (nonatomic, strong) UIColor *selectedTextColor;
+@property (nonatomic, strong) UIColor *offDayTextColor;
 
 @end
 
@@ -45,6 +46,7 @@ typedef enum {
 @property (nonatomic, strong) NSLocale *locale;
 @property (nonatomic) BOOL onlyShowCurrentMonth;
 @property (nonatomic) BOOL adaptHeightToNumberOfWeeksInMonth;
+@property (nonatomic, strong) NSArray *offDays;
 
 @property (nonatomic, weak) id<CKCalendarDelegate> delegate;
 
@@ -54,7 +56,7 @@ typedef enum {
 @property (nonatomic, strong) UIFont *dateOfWeekFont;
 @property (nonatomic, strong) UIColor *dayOfWeekTextColor;
 @property (nonatomic, strong) UIFont *dateFont;
-@property (nonatomic, assign) CGSize monthButtonSize;
+@property (nonatomic) CGSize monthButtonSize;
 
 - (void)setMonthButtonColor:(UIColor *)color;
 - (void)setInnerBorderColor:(UIColor *)color;
